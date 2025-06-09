@@ -4,6 +4,7 @@ import os
 import unicodedata
 import hashlib
 import platform
+from datetime import datetime
 
 try:
     import wcwidth
@@ -138,9 +139,10 @@ def main():
         distro_version = "unknown"
     
     # Create filename (remove colons and other problematic chars)
+    date_str = datetime.now().strftime("%Y-%m-%d")
     safe_terminal_name = terminal_name.replace(":", "_").replace("/", "_").replace(" ", "_")
     safe_distro_version = distro_version.replace(".", "_").replace(":", "_").replace("/", "_").replace(" ", "_")
-    filename_base = f"results/{os_info}_{safe_distro_version}_{safe_terminal_name}_{binary_hash}"
+    filename_base = f"results/{date_str}_{os_info}_{safe_distro_version}_{safe_terminal_name}_{binary_hash}"
     
     # Ensure results directory exists
     os.makedirs("results", exist_ok=True)
