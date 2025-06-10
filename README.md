@@ -5,7 +5,7 @@ print a char, check wcswidth against the cursor position.
 
 Run in your favourite terminal, add your results to ./results and send a pull request.
 
-## results
+## Results
 
 | Terminal              | Mismatches | Date       | OS    | Distro      | Hash     |
 |-----------------------|------------|------------|-------|-------------|----------|
