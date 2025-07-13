@@ -5,6 +5,7 @@ import unicodedata
 import hashlib
 import platform
 from datetime import datetime
+import argparse
 
 try:
     import wcwidth
@@ -12,6 +13,29 @@ except ImportError:
     os.system("pip install wcwidth")
     import wcwidth
 
+
+def detect_flatpak_terminal(pid):
+    """Detect the actual terminal when running under flatpak"""
+    # Check environment first
+    flatpak_id = os.environ.get('FLATPAK_ID', '')
+    if flatpak_id:
+        # Extract terminal name from flatpak ID (e.g. org.contourterminal.Contour -> contour)
+        return flatpak_id.split('.')[-1].lower()
+    
+    # Fallback: look for org.*.* pattern in cmdline
+    try:
+        with open(f'/proc/{pid}/cmdline', 'r') as f:
+            cmdline = f.read()
+        
+        # Find org.something.Something pattern
+        import re
+        match = re.search(r'org\.[^/\s]+\.([A-Z][a-zA-Z]+)', cmdline)
+        if match:
+            return match.group(1).lower()
+    except:
+        pass
+    
+    return 'flatpak-unknown'
 
 def get_terminal_info():
     terminal_name = os.environ.get('TERM', 'unknown')
@@ -31,6 +55,10 @@ def get_terminal_info():
         try:
             binary_path = os.readlink(f'/proc/{gppid}/exe')
             terminal_name = os.path.basename(binary_path)
+            
+            # Special handling for flatpak
+            if terminal_name == 'flatpak-session-helper':
+                terminal_name = detect_flatpak_terminal(gppid)
             
             with open(binary_path, 'rb') as f:
                 binary_content = f.read()
@@ -180,4 +208,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Unicode width test')
+    parser.add_argument('--get-terminal-name', action='store_true',
+                        help='Just print the detected terminal name and exit')
+    args = parser.parse_args()
+    
+    if args.get_terminal_name:
+        terminal_name, binary_hash = get_terminal_info()
+        print(f"{terminal_name} ({binary_hash})")
+    else:
+        main()
